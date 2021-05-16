@@ -6,12 +6,12 @@ import nltk
 
 def load_review_dat(path, genre):
     
-    # keep 20% of reviews
+    # keep 10% of reviews
     reviews = []
     with open(path) as f:
         for line in f:
             entry = json.loads(line)
-            if np.random.uniform() < 0.2:
+            if np.random.uniform() < 0.1:
                 reviews.append(entry)
                 
     # convert to DF, retaining only relevant columns
@@ -27,9 +27,9 @@ mystery = load_review_dat("data/goodreads_reviews_mystery.json", "mystery")
 history = load_review_dat("data/goodreads_reviews_history_biography.json", "history")
 fantasy = load_review_dat("data/goodreads_reviews_fantasy_paranormal.json", "fantasy")
 
-reviews = pandas.concat([mystery, history, fantasy], ignore_index=True)
+reviews = pd.concat([mystery, history, fantasy], ignore_index=True)
 print("Reviews Loaded")
-print(reviews.group_by("genre").count()["user_id"])
+print(reviews.groupby("genre").count()["user_id"])
 
 # filter to reviews in English
 language_model = fasttext.load_model('lid.176.bin')

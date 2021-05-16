@@ -2,3 +2,6 @@ data/
 *.csv
 *.bin
 *.pdf
+*.log
+.DS_Store
+.ipynb_checkpoints/
