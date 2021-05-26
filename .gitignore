@@ -3,5 +3,6 @@ data/
 *.bin
 *.pdf
 *.log
+*.out
 .DS_Store
 .ipynb_checkpoints/

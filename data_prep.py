@@ -57,5 +57,5 @@ reviews["tokenized_words"] = reviews["tokenized_words"].apply(lambda review: " "
 reviews = reviews.drop(["review_text"],axis=1)
 
 # save
-reviews.to_csv("reviews.csv", index=False)
+reviews.to_csv("data/reviews.csv", index=False)
 print("Saved")
