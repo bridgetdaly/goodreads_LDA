@@ -4,5 +4,6 @@ data/
 *.pdf
 *.log
 *.out
+*.png
 .DS_Store
 .ipynb_checkpoints/
