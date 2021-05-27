@@ -40,22 +40,18 @@ print("Reviews Filtered to English")
 print(reviews.groupby("genre").count()["user_id"])
 
 # tokenize reviews
-reviews["tokenized_words"] = reviews["review_text"].apply(lambda review: [word.lower() for word in nltk.tokenize.word_tokenize(review) if word.isalpha()])
+reviews["tokens"] = reviews["review_text"].apply(lambda review: [word.lower() for word in nltk.tokenize.word_tokenize(review) if word.isalpha()])
 
 # remove stop words
 stopwords = nltk.corpus.stopwords.words('english')
-reviews["tokenized_words"] = reviews["tokenized_words"].apply(lambda review: [word for word in review if word not in stopwords])
+reviews["tokens"] = reviews["tokens"].apply(lambda review: [word for word in review if word not in stopwords])
 print("Stop Words Removed")
 
 # lemmatization
 wnl = nltk.stem.wordnet.WordNetLemmatizer()
-reviews["tokenized_words"] = reviews["tokenized_words"].apply(lambda review: [wnl.lemmatize(word) for word in review])
+reviews["tokens"] = reviews["tokens"].apply(lambda review: [wnl.lemmatize(word) for word in review])
 print("Lemmatized")
 
-# return to string to save
-reviews["tokenized_words"] = reviews["tokenized_words"].apply(lambda review: " ".join(review))
-reviews = reviews.drop(["review_text"],axis=1)
-
 # save
-reviews.to_csv("data/reviews.csv", index=False)
+reviews.to_pickle("data/reviews.pkl")
 print("Saved")

@@ -20,47 +20,69 @@ def add_bigrams(reviews, min_count):
                 reviews[idx].append(token)
 
 # load data
-dat = pd.read_csv("data/reviews.csv")
+dat = pd.read_pickle("data/reviews.pkl")
 dat = dat.sample(n=102000, random_state=271)
-
-# tokenize
-dat["tokenized"] = dat["tokenized_words"].astype(str).apply(lambda review: [word for word in nltk.tokenize.word_tokenize(review)])
 
 # split into train/test
 train, test = train_test_split(dat,
                                test_size=2000,
                                random_state=271)
 
+train.reset_index(drop=True, inplace=True)
+test.reset_index(drop=True, inplace=True)
+
 print(len(train), len(test))
 print(train.groupby("genre").count()["user_id"]/len(train))
 
 # collect train tokens and add common bigrams
-reviews = train["tokenized"].tolist()
+reviews = train["tokens"].tolist()
 add_bigrams(reviews, min_count=20)
 
-# build and filter vocabulary
+# build vocabulary
 dictionary = Dictionary(reviews)
 dictionary.filter_extremes(no_below=20, no_above=0.35)
 dictionary.save("data/dictionary.pkl", pickle_protocol=5)
 
-# build and filter corpus (and reviews for use in coherence)
+# build train corpus
 corpus = [dictionary.doc2bow(rev) for rev in reviews]
 train_corpus = []
-train_reviews = []
 for r in range(len(reviews)):
     if len(corpus[r]) > 10:
         train_corpus.append(corpus[r])
-        train_reviews.append(reviews[r])
+    else:
+        train.drop(index=r, inplace=True)
 MmCorpus.serialize("data/train_corpus.mm", train_corpus)
-temp_file = open("data/train_reviews.pkl", "wb")
-pickle.dump(train_reviews, temp_file)
+temp_file = open("data/train.pkl", "wb")
+pickle.dump(train, temp_file)
 temp_file.close()
 print("Train corpus: ", len(train_corpus))
 
 # build test corpus
-test_reviews = test["tokenized"].tolist()
+test_reviews = test["tokens"].tolist()
 add_bigrams(test_reviews, min_count=1)
-test_corpus = [dictionary.doc2bow(rev) for rev in test_reviews]
-test_corpus = [review for review in test_corpus if len(review) > 10]
+test_corpus_pre = [dictionary.doc2bow(rev) for rev in test_reviews]
+test_corpus = []
+for r in range(len(test_reviews)):
+    if len(test_corpus_pre[r]) > 10:
+        test_corpus.append(test_corpus_pre[r])
+    else:
+        test.drop(index=r, inplace=True)
 MmCorpus.serialize("data/test_corpus.mm", test_corpus)
+temp_file = open("data/test.pkl", "wb")
+pickle.dump(test, temp_file)
+temp_file.close()
 print("Test corpus: ", len(test_corpus))
+
+# build authorless-topic model inputs
+# 1) tsv with doc id, author, space separated tokens
+genre_doc = train.iloc[:,5:]
+genre_doc["tokens"] = genre_doc["tokens"].apply(lambda rev: " ".join(rev))
+genre_doc.to_csv("data/genre_reviews.tsv", sep="\t", header=False)
+
+sent_doc = train.iloc[:,[2,6]]
+sent_doc["tokens"] = sent_doc["tokens"].apply(lambda rev: " ".join(rev))
+sent_doc.to_csv("data/sent_reviews.tsv", sep="\t", header=False)
+
+#2) vocabulary
+vocab = pd.Series(dictionary.token2id.keys())
+vocab.to_csv("data/vocab.tsv", index=False, header=False)
